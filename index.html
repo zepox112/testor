@@ -305,7 +305,7 @@
             <p style="font-size: 10px; margin-bottom: 20px; opacity: 0.8;">IAA Gender & Counseling Support System</p>
 
             <div id="choiceUI">
-                <button class="btn" onclick="authenticateBiometric()">FUNGUA KWA BIOMETRIC (FACE/FINGER) 🔓</button>
+                <button class="btn" onclick="authenticateBiometric()" id="bioBtn">FUNGUA KWA BIOMETRIC 🔓</button>
 
                 <div class="divider"><span>AU TUMIA KODI</span></div>
 
@@ -382,21 +382,26 @@
         let anonId = localStorage.getItem('iaa_welfare_id');
         let tempID = "";
 
-        // 1. REAL BIOMETRIC LOGIC (WEBAUTHN)
+        // CORE BIOMETRIC LOGIC
         async function authenticateBiometric() {
-            if (!anonId) return alert("Hujasajiliwa. Chagua 'Mgeni Mpya' kwanza.");
+            if (!anonId) return alert("Hujasajiliwa bado.");
 
+            // Hapa tunaiambia browser kuwa tunataka kutumia sensa ya simu (Platform)
             const options = {
                 publicKey: {
-                    challenge: new Uint8Array([1, 2, 3, 4]),
-                    allowCredentials: [],
+                    challenge: crypto.getRandomValues(new Uint8Array(32)),
+                    allowCredentials: [{
+                        id: Uint8Array.from(anonId, c => c.charCodeAt(0)),
+                        type: "public-key",
+                        transports: ["internal"] // Hii inalazimisha Fingerprint/Face ID ya ndani ya simu
+                    }],
                     userVerification: "required",
                     timeout: 60000
                 }
             };
 
             try {
-                // Hapa ndipo Windows Hello/Fingerprint itawaka kweli
+                // Ikiwa simu haina passkey bado, itauliza Fingerprint kuunda moja
                 const assertion = await navigator.credentials.get(options);
                 if (assertion) {
                     sessionStorage.setItem('is_auth', 'true');
@@ -404,22 +409,26 @@
                 }
             } catch (e) {
                 console.error(e);
-                alert("Uhakiki Umesitishwa! Tumia kodi yako ya siri kama huwezi kutumia Biometric.");
+                // Ikiwa hakuna passkey, mpe option ya kawaida
+                alert("Simu imeshindwa kusoma Biometric. Tumia Kodi ya siri.");
             }
         }
 
         async function registerBiometric() {
             const options = {
                 publicKey: {
-                    challenge: new Uint8Array([1, 2, 3, 4]),
-                    rp: { name: "IAA Gender System" },
+                    challenge: crypto.getRandomValues(new Uint8Array(32)),
+                    rp: { name: "IAA Gender System", id: window.location.hostname },
                     user: {
-                        id: Uint8Array.from(tempID, c => c.charCodeAt(0)),
+                        id: crypto.getRandomValues(new Uint8Array(16)),
                         name: tempID,
                         displayName: tempID
                     },
-                    pubKeyCredParams: [{ alg: -7, type: "public-key" }],
-                    authenticatorSelection: { userVerification: "required" },
+                    pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
+                    authenticatorSelection: {
+                        authenticatorAttachment: "platform", // Inalazimisha Fingerprint/FaceID ya kifaa
+                        userVerification: "required"
+                    },
                     timeout: 60000
                 }
             };
@@ -430,11 +439,12 @@
                     localStorage.setItem('iaa_welfare_id', tempID);
                     anonId = tempID;
                     sessionStorage.setItem('is_auth', 'true');
-                    alert("Imesajiliwa! Karibu.");
+                    alert("Biometric Imesajiliwa! Karibu.");
                     openApp();
                 }
             } catch (e) {
-                alert("Usajili wa Biometric umeshindwa. Lakini unaweza kuingia kwa kodi.");
+                console.error(e);
+                alert("Usajili wa Biometric umeshindwa. Ingia kwa kodi.");
                 localStorage.setItem('iaa_welfare_id', tempID);
                 anonId = tempID;
                 sessionStorage.setItem('is_auth', 'true');
@@ -455,7 +465,7 @@
                 sessionStorage.setItem('is_auth', 'true');
                 openApp();
             } else {
-                alert("Kodi si sahihi kwa kifaa hiki!");
+                alert("Kodi si sahihi!");
             }
         }
 
@@ -478,7 +488,7 @@
             }
         });
 
-        // 2. CORE FUNCTIONS
+        // CORE APP FUNCTIONS
         function switchView(viewId, tabElem) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             tabElem.classList.add('active');
@@ -489,20 +499,20 @@
 
         async function submitReport() {
             const desc = document.getElementById('reportDesc').value;
-            if (!desc) return alert("Weka maelezo ya tukio.");
+            if (!desc) return alert("Weka maelezo.");
             try {
                 await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'sendReport', anonId, category: document.getElementById('reportCategory').value, desc }) });
-                alert("Ripoti imetumwa kwa usiri mkubwa!");
+                alert("Ripoti imetumwa!");
                 document.getElementById('reportDesc').value = "";
             } catch (e) { alert("Tatizo la mtandao!"); }
         }
 
         async function submitSuggestion() {
             const content = document.getElementById('suggestContent').value;
-            if (!content) return alert("Weka maoni.");
+            if (!content) return alert("Andika maoni.");
             try {
                 await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'sendSuggestion', target: document.getElementById('suggestTarget').value, content }) });
-                alert("Asante kwa maoni!");
+                alert("Asante!");
                 document.getElementById('suggestContent').value = "";
             } catch (e) { alert("Hitilafu!"); }
         }
@@ -523,7 +533,7 @@
                 const res = await fetch(`${APPS_SCRIPT_URL}?action=getMessages&anonId=${anonId}`);
                 const messages = await res.json();
                 if (!messages || messages.length === 0) {
-                    display.innerHTML = `<div style="text-align:center; opacity:0.5; font-size:11px; margin-top:100px;">Bado hakuna mazungumzo.</div>`;
+                    display.innerHTML = `<div style="text-align:center; opacity:0.5; font-size:11px; margin-top:100px;">Anza mazungumzo...</div>`;
                     return;
                 }
                 display.innerHTML = messages.map(m => `
