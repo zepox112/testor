@@ -1,0 +1,20 @@
+{
+    "name": "IAA Gender Support",
+    "short_name": "IAA Voice",
+    "start_url": "index.html",
+    "display": "standalone",
+    "background_color": "#061a3d",
+    "theme_color": "#00d2ff",
+    "icons": [
+        {
+            "src": "logo.jpg",
+            "sizes": "192x192",
+            "type": "image/jpeg"
+        },
+        {
+            "src": "logo.jpg",
+            "sizes": "512x512",
+            "type": "image/jpeg"
+        }
+    ]
+}
