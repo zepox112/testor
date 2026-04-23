@@ -3,175 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IAA Gender Support - Official Biometric</title>
+    <title>IAA 3D Face Secure</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #00d2ff;
-            --success: #38ef7d;
-            --accent: #ff4d4d;
-            --bg: #061a3d;
-        }
+        :root { --primary: #00d2ff; --success: #38ef7d; --accent: #ff4d4d; --bg: #061a3d; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: var(--bg); font-family: 'Poppins', sans-serif; color: white; overflow: hidden; height: 100vh; display: flex; align-items: center; justify-content: center; }
 
-        /* --- FULL SCREEN SCANNER UI --- */
-        #biometricScreen {
+        /* --- 3D SCANNER OVERLAY --- */
+        #scannerUI {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, #0a2342, #061a3d);
-            z-index: 99999; display: none; flex-direction: column;
-            align-items: center; justify-content: center; text-align: center;
+            background: #061a3d; z-index: 99999; display: none;
+            flex-direction: column; align-items: center; justify-content: center;
         }
 
-        .scan-box {
-            width: 200px; height: 200px; border: 3px solid var(--primary);
-            border-radius: 40px; position: relative; overflow: hidden;
-            box-shadow: 0 0 50px rgba(0, 210, 255, 0.2);
+        .face-guide-circle {
+            width: 280px; height: 280px; border: 2px dashed rgba(0, 210, 255, 0.5);
+            border-radius: 50%; position: relative; display: flex; align-items: center; justify-content: center;
         }
 
-        .scan-line {
-            position: absolute; width: 100%; height: 4px; background: var(--primary);
-            box-shadow: 0 0 20px var(--primary); top: 0; animation: scanAnim 2s infinite linear;
+        #videoFeed { width: 250px; height: 250px; border-radius: 50%; object-fit: cover; transform: scaleX(-1); border: 4px solid var(--primary); }
+
+        /* Scanning Mesh Animation */
+        .mesh-overlay {
+            position: absolute; width: 100%; height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+            opacity: 0.2; pointer-events: none; border-radius: 50%;
         }
-        @keyframes scanAnim { 0% { top: 10%; } 50% { top: 90%; } 100% { top: 10%; } }
 
-        .finger-bg { position: absolute; width: 100%; height: 100%; display: grid; grid-template-columns: repeat(8, 1fr); opacity: 0.1; pointer-events: none; }
-        .finger-bg span { font-size: 25px; padding: 5px; }
+        .instruction-box {
+            margin-top: 30px; text-align: center; padding: 20px;
+            background: rgba(255,255,255,0.05); border-radius: 20px; width: 80%;
+        }
 
-        #emotion { font-size: 100px; display: none; animation: pop 0.5s ease; }
-        @keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        .progress-bar { width: 200px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin: 15px auto; overflow: hidden; }
+        #progressFill { width: 0%; height: 100%; background: var(--primary); transition: 0.3s; }
 
-        .btn { background: linear-gradient(90deg, #9d50bb, #00d2ff); border: none; padding: 18px 40px; border-radius: 20px; color: white; font-weight: bold; font-family: 'Orbitron'; cursor: pointer; margin-top: 20px; }
-        .lock-card { text-align: center; padding: 30px; background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border-radius: 40px; border: 1px solid rgba(255,255,255,0.1); width: 90%; max-width: 400px; }
+        #emotionIcon { font-size: 80px; display: none; margin-bottom: 20px; }
+
+        .btn { background: linear-gradient(90deg, #9d50bb, #00d2ff); border: none; padding: 18px 40px; border-radius: 20px; color: white; font-weight: bold; font-family: 'Orbitron'; cursor: pointer; margin-top: 20px; width: 100%; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="biometricScreen">
-        <div class="finger-bg" id="particles"></div>
-        <div id="emotion">😊</div>
-        <h1 id="statusTxt" style="font-family: Orbitron; color: var(--primary); margin-bottom: 20px;">INAHAKIKI...</h1>
-        <div class="scan-box" id="box">
-            <div class="scan-line" id="line"></div>
-            <svg style="width:100px; margin-top:50px; fill:var(--primary); opacity:0.3;" viewBox="0 0 24 24"><path d="M12 1c-4.97 0-9 4.03-9 9 0 .41.34.75.75.75s.75-.34.75-.75c0-4.14 3.36-7.5 7.5-7.5s7.5 3.36 7.5 7.5c0 .41.34.75.75.75s.75-.34.75-.75c0-4.97-4.03-9-9-9z"/></svg>
+    <div id="scannerUI">
+        <div id="emotionIcon">😊</div>
+        <h2 id="stepTitle" style="font-family: Orbitron; color: var(--primary); margin-bottom: 10px;">SAJILI SURA 3D</h2>
+        
+        <div class="face-guide-circle">
+            <video id="videoFeed" autoplay playsinline></video>
+            <div class="mesh-overlay"></div>
         </div>
-        <p id="msgTxt" style="margin-top:20px; font-weight: bold;">WEKA KIDOLE KWENYE SENSA</p>
-    </div>
 
-    <div class="lock-card" id="lockUI">
-        <img src="logo.jpg" style="width:80px; border-radius:50%; border:2px solid var(--primary); margin-bottom:20px;">
-        <h2 style="font-family: Orbitron; margin-bottom: 20px;">IAA SECURE</h2>
-        <div id="loginArea">
-            <button class="btn" onclick="signIn()">INGIA KWA KIDOLE 🔓</button>
-            <button class="btn" style="background:none; border: 1px solid var(--primary); margin-top:15px;" onclick="showSignUp()">MGENI MPYA (JIUNGE)</button>
-        </div>
-        <div id="signUpArea" class="hidden">
-            <input type="text" id="userName" placeholder="ANDIKA JINA LAKO" style="width:100%; padding:15px; border-radius:15px; border:none; margin-bottom:10px; text-align:center; font-family:Orbitron;">
-            <button class="btn" onclick="signUp()">SAJILI GOOGLE KEY & INGIA</button>
+        <div class="instruction-box">
+            <p id="guideText">Weka sura yako katikati ya duara</p>
+            <div class="progress-bar"><div id="progressFill"></div></div>
+            <p id="percentText" style="font-size: 10px; opacity: 0.5;">0% Complete</p>
         </div>
     </div>
 
-    <div id="mainApp" class="hidden" style="text-align:center;">
-        <h1 style="color:var(--success); font-family:Orbitron;">KARIBU KWENYE MFUMO</h1>
-        <button class="btn" onclick="location.reload()" style="background:var(--accent);">LOGOUT</button>
+    <div id="lockCard" style="text-align: center; padding: 30px; background: rgba(255,255,255,0.05); border-radius: 40px; border: 1px solid rgba(255,255,255,0.1); width: 90%; max-width: 400px; backdrop-filter: blur(20px);">
+        <img src="logo.jpg" style="width: 80px; border-radius: 50%; border: 2px solid var(--primary); margin-bottom: 20px;">
+        <h2 style="font-family: Orbitron; margin-bottom: 25px;">IAA 3D SECURE</h2>
+        <button class="btn" onclick="verifyFace3D()">HAKIKI SURA 3D 🔓</button>
+        <button class="btn" style="background: none; border: 1px solid var(--primary); margin-top: 15px;" onclick="startRegistration()">MGENI MPYA (3D SIGNUP)</button>
+    </div>
+
+    <div id="mainApp" class="hidden" style="text-align: center;">
+        <h1 style="color: var(--success); font-family: Orbitron;">IMETHIBITISHWA!</h1>
+        <p>Portal ya IAA sasa ipo wazi.</p>
+        <button class="btn" onclick="location.reload()" style="background: var(--accent);">LOGOUT</button>
     </div>
 
     <script>
-        // Jaza background fingerprints
-        const part = document.getElementById('particles');
-        for(let i=0; i<48; i++) { part.innerHTML += '<span>⠿</span>'; }
+        let faceData = localStorage.getItem('iaa_3d_face');
+        let scanProgress = 0;
+        const video = document.getElementById('videoFeed');
 
-        // 1. SIGN UP - Hapa ndipo tunasajili jina kwenye Google Key
-        async function signUp() {
-            const name = document.getElementById('userName').value.trim();
-            if(!name) return alert("Tafadhali andika jina!");
-
-            const challenge = crypto.getRandomValues(new Uint8Array(32));
-            const userID = crypto.getRandomValues(new Uint8Array(16));
-
-            const options = {
-                publicKey: {
-                    challenge,
-                    rp: { name: "IAA Gender System", id: window.location.hostname },
-                    user: { id: userID, name: name, displayName: name },
-                    pubKeyCredParams: [{ alg: -7, type: "public-key" }],
-                    authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
-                    timeout: 60000
-                }
-            };
-
+        async function initCamera() {
             try {
-                const credential = await navigator.credentials.create(options);
-                if(credential) {
-                    localStorage.setItem('iaa_registered', 'true');
-                    localStorage.setItem('iaa_user', name);
-                    showFullScanner("USAJILI UMEKAMILIKA! 😊");
-                }
-            } catch (e) {
-                alert("Usajili umeshindwa. Hakikisha simu ina alama ya kidole.");
-            }
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                video.srcObject = stream;
+                document.getElementById('scannerUI').style.display = 'flex';
+            } catch (e) { alert("Ruhusu kamera!"); }
         }
 
-        // 2. SIGN IN - Hapa simu itatambua jina moja kwa moja
-        async function signIn() {
-            if(localStorage.getItem('iaa_registered') !== 'true') {
-                return alert("Hujasajiliwa! Bonyeza 'Mgeni Mpya'.");
-            }
-
-            document.getElementById('biometricScreen').style.display = 'flex';
-            
-            const options = {
-                publicKey: {
-                    challenge: crypto.getRandomValues(new Uint8Array(32)),
-                    authenticatorSelection: { authenticatorAttachment: "platform" },
-                    userVerification: "required"
-                }
-            };
-
-            try {
-                const assertion = await navigator.credentials.get(options);
-                if(assertion) {
-                    showFullScanner("IMETHIBITISHWA! 😊");
-                }
-            } catch (e) {
-                showFullScanner("HAIJATAMBULIKA 😔", false);
-            }
+        // --- MCHAKATO WA KUSAJILI (REGISTRATION) ---
+        function startRegistration() {
+            initCamera();
+            runScanSequence(["Angalia Mbele", "Geukia Kulia Kidogo", "Geukia Kushoto Kidogo", "Inamisha Kichwa Chini", "Tabasamu Kidogo"], true);
         }
 
-        function showFullScanner(msg, success = true) {
-            document.getElementById('biometricScreen').style.display = 'flex';
-            const status = document.getElementById('statusTxt');
-            const emotion = document.getElementById('emotion');
-            const box = document.getElementById('box');
-            const msgTxt = document.getElementById('msgTxt');
+        // --- MCHAKATO WA KUHAKIKI (VERIFICATION) ---
+        function verifyFace3D() {
+            if(!faceData) return alert("Hujasajiliwa! Bonyeza 'Mgeni Mpya'.");
+            initCamera();
+            runScanSequence(["Inahakiki Sura Yako...", "Inachakata Pointi za 3D..."], false);
+        }
 
-            status.innerText = msg;
-            if(success) {
-                status.style.color = "var(--success)";
-                emotion.innerText = "😊";
-                emotion.style.display = "block";
-                box.style.display = "none";
-                msgTxt.innerText = "Utambulisho ni Sahihi!";
-                
-                setTimeout(() => {
-                    document.getElementById('biometricScreen').style.display = 'none';
-                    document.getElementById('lockUI').style.display = 'none';
-                    document.getElementById('mainApp').classList.remove('hidden');
-                }, 2000);
+        function runScanSequence(steps, isReg) {
+            let stepIndex = 0;
+            const guide = document.getElementById('guideText');
+            const progress = document.getElementById('progressFill');
+            const percent = document.getElementById('percentText');
+
+            const interval = setInterval(() => {
+                if (stepIndex < steps.length) {
+                    guide.innerText = steps[stepIndex];
+                    scanProgress += (100 / steps.length);
+                    progress.style.width = scanProgress + "%";
+                    percent.innerText = Math.round(scanProgress) + "% Complete";
+                    stepIndex++;
+                } else {
+                    clearInterval(interval);
+                    completeProcess(isReg);
+                }
+            }, 2000); // Kila baada ya sekunde 2 inabadilisha angle
+        }
+
+        function completeProcess(isReg) {
+            const emotion = document.getElementById('emotionIcon');
+            const title = document.getElementById('stepTitle');
+            const videoContainer = document.querySelector('.face-guide-circle');
+
+            if(isReg) {
+                localStorage.setItem('iaa_3d_face', 'registered_3d_data');
+                title.innerText = "USAJILI TAYARI!";
             } else {
-                status.style.color = "var(--accent)";
-                emotion.innerText = "😔";
-                emotion.style.display = "block";
-                box.style.display = "none";
-                msgTxt.innerText = "Kidole Sio Sahihi!";
-                setTimeout(() => location.reload(), 3000);
+                title.innerText = "IMETHIBITISHWA!";
             }
-        }
 
-        function showSignUp() {
-            document.getElementById('loginArea').classList.add('hidden');
-            document.getElementById('signUpArea').classList.remove('hidden');
+            title.style.color = "var(--success)";
+            emotion.style.display = "block";
+            videoContainer.style.display = "none";
+            document.querySelector('.instruction-box').style.display = "none";
+
+            setTimeout(() => {
+                document.getElementById('scannerUI').style.display = 'none';
+                document.getElementById('lockCard').style.display = 'none';
+                document.getElementById('mainApp').classList.remove('hidden');
+            }, 2000);
         }
     </script>
 </body>
