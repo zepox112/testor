@@ -89,13 +89,14 @@
         }
 
         .scanner-frame {
-            width: 280px;
-            height: 350px;
-            border: 2px solid var(--primary);
-            border-radius: 20px;
+            width: 250px;
+            height: 320px;
+            border: 3px solid var(--primary);
+            border-radius: 25px;
             position: relative;
             overflow: hidden;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 30px var(--primary);
         }
 
         .scanning-line {
@@ -105,7 +106,7 @@
             background: var(--primary);
             top: 0;
             box-shadow: 0 0 20px var(--primary);
-            animation: moveLine 2s infinite ease-in-out;
+            animation: moveLine 2.5s infinite ease-in-out;
         }
 
         @keyframes moveLine {
@@ -124,30 +125,30 @@
             display: grid;
             grid-template-columns: repeat(6, 1fr);
             gap: 10px;
-            padding: 20px;
-            opacity: 0.2;
+            padding: 25px;
+            opacity: 0.3;
         }
 
         .finger-icon {
-            font-size: 30px;
+            font-size: 25px;
             color: var(--primary);
+            animation: flicker 1s infinite alternate;
+        }
+
+        @keyframes flicker {
+            from {
+                opacity: 0.2;
+            }
+
+            to {
+                opacity: 0.8;
+            }
         }
 
         #emotionResult {
-            font-size: 80px;
+            font-size: 100px;
             margin-bottom: 20px;
             display: none;
-            animation: pop 0.5s ease;
-        }
-
-        @keyframes pop {
-            0% {
-                transform: scale(0);
-            }
-
-            100% {
-                transform: scale(1);
-            }
         }
 
         .btn {
@@ -160,6 +161,7 @@
             font-weight: 600;
             cursor: pointer;
             margin-top: 15px;
+            font-family: 'Orbitron';
         }
 
         .id-badge {
@@ -170,6 +172,7 @@
             font-weight: bold;
             margin: 20px 0;
             display: inline-block;
+            font-family: 'Orbitron';
         }
 
         .container {
@@ -209,137 +212,151 @@
     <div id="lockOverlay">
         <div class="lock-box">
             <img src="logo.jpg" alt="Logo" class="header-logo">
-            <h2 style="font-family: Orbitron; color: var(--primary); font-size: 18px;">IAA SECURITY ACCESS</h2>
-            <p style="font-size: 10px; margin-bottom: 20px; opacity: 0.8;">Salama • Siri • Uhakika</p>
+            <h2 style="font-family: Orbitron; color: var(--primary); font-size: 16px;">HIGH SECURITY ACCESS</h2>
+            <p style="font-size: 10px; margin-bottom: 25px; opacity: 0.7;">UTHIBITISHO WA BIOMETRIC UNAHITAJIKA</p>
 
             <div id="mainAuthUI">
-                <button class="btn" onclick="openCustomScanner()">HAKIKI KWA BIOMETRICS 🔓</button>
+                <button class="btn" onclick="startVerification()">HAKIKI BIOMETRICS 🔓</button>
                 <div class="divider"><span>AU TUMIA KODI</span></div>
                 <input type="text" id="passcodeInput" placeholder="ANON-XXXX"
-                    style="text-align: center; text-transform: uppercase;">
-                <button class="btn" style="background: rgba(255,255,255,0.1);" onclick="verifyWithCode()">INGIA KWA
-                    KODI</button>
-                <button class="btn" style="background:none; border: 1px solid var(--primary); margin-top: 20px;"
-                    onclick="startNewUser()">MIMI NI MGENI MPYA</button>
+                    style="text-align: center; text-transform: uppercase; width: 100%; padding: 12px; border-radius: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: white;">
+                <button class="btn" style="background: rgba(255,255,255,0.1); font-size: 11px;"
+                    onclick="verifyWithCode()">INGIA KWA KODI</button>
+                <button class="btn" style="background:none; border: 1px solid var(--primary); margin-top: 30px;"
+                    onclick="showRegistration()">MIMI NI MGENI MPYA</button>
             </div>
 
             <div id="newUserUI" class="hidden">
-                <p style="font-size: 12px;">Hifadhi kodi yako ya siri:</p>
+                <p style="font-size: 11px;">Hifadhi jina hili la siri la kudumu:</p>
                 <div class="id-badge" id="newIDDisplay">...</div>
-                <button class="btn" onclick="saveAndEnter()">HIFADHI & INGIA</button>
+                <button class="btn" onclick="enrollBiometrics()">SAJILI BIOMETRICS & INGIA</button>
             </div>
         </div>
     </div>
 
     <div id="biometricScreen">
         <div id="emotionResult">😊</div>
-        <h1 id="scanTitle" style="font-family: Orbitron; color: var(--primary); margin-bottom: 10px;">INAHAKIKI...</h1>
-        <p id="scanSub" style="font-size: 12px; margin-bottom: 30px; opacity: 0.7;">Weka uso au kidole kwenye kioo</p>
+        <h1 id="scanTitle" style="font-family: Orbitron; color: var(--primary); margin-bottom: 10px; font-size: 20px;">
+            INAHAKIKI...</h1>
+        <p id="scanSub" style="font-size: 12px; margin-bottom: 30px; opacity: 0.6;">Tafadhali usiiondoe Sura au Kidole
+        </p>
 
         <div class="scanner-frame" id="scannerFrame">
             <div class="scanning-line" id="line"></div>
             <div class="fingerprint-grid" id="fingerGrid"></div>
         </div>
-        <p id="feedbackText" style="margin-top: 20px; font-weight: 600;"></p>
+        <p id="statusMsg" style="margin-top: 25px; font-weight: 600; letter-spacing: 1px; color: var(--primary);"></p>
     </div>
 
     <div class="container" id="mainApp">
-        <div class="header" style="text-align: center; margin-bottom: 20px;">
+        <div class="header" style="text-align: center;">
             <img src="logo.jpg" alt="Logo" style="width: 50px; height: 50px; border-radius: 50%; background: white;">
-            <h1 style="font-size: 16px; margin-top: 10px; color: var(--primary);">IAA GENDER SUPPORT</h1>
-            <p style="font-size: 10px; opacity: 0.5;">PORTAL IPO WAZI</p>
+            <h1 style="font-size: 15px; margin-top: 10px; font-family: Orbitron; color: var(--primary);">PORTAL IPO WAZI
+            </h1>
+            <p style="font-size: 11px; opacity: 0.6; margin-bottom: 20px;">Karibu kwenye Mfumo Salama wa IAA</p>
+            <button class="btn" onclick="location.reload()"
+                style="background: var(--accent); width: auto; padding: 8px 20px;">FUNGA MFUMO</button>
         </div>
-        <button class="btn" onclick="location.reload()">LOGOUT & LOCK</button>
     </div>
 
     <script>
-        let anonId = localStorage.getItem('iaa_id');
+        let savedId = localStorage.getItem('iaa_auth_token');
+        let biometricRegistered = localStorage.getItem('iaa_bio_ready');
         let tempID = "";
 
-        // Tengeneza grid ya fingerprints kwa wingi
+        // Jaza grid ya fingerprints
         const grid = document.getElementById('fingerGrid');
-        for (let i = 0; i < 36; i++) {
-            grid.innerHTML += '<span class="finger-icon">⠿</span>';
-        }
+        for (let i = 0; i < 36; i++) { grid.innerHTML += '<span class="finger-icon">⠿</span>'; }
 
-        function openCustomScanner() {
-            if (!anonId) return alert("Hujasajiliwa bado!");
-
-            document.getElementById('biometricScreen').style.display = 'flex';
-            const feedback = document.getElementById('feedbackText');
-            const frame = document.getElementById('scannerFrame');
-            const line = document.getElementById('line');
-            const emotion = document.getElementById('emotionResult');
-            const title = document.getElementById('scanTitle');
-
-            feedback.innerText = "Inatafuta alama za kibaolojia...";
-
-            // Simulation ya uhakiki (Real custom logic)
-            setTimeout(() => {
-                feedback.innerText = "Inachakata Sura na Kidole...";
-                frame.style.borderColor = "var(--success)";
-                line.style.background = "var(--success)";
-            }, 2000);
-
-            setTimeout(() => {
-                // HAPA NDIPO UNAPOWEZA KUWEKA LOGIC YA KWELI
-                // Kwa demo hii, tunadhani imekubali
-                title.innerText = "IMETHIBITISHWA!";
-                title.style.color = "var(--success)";
-                emotion.innerText = "😊";
-                emotion.style.display = "block";
-                frame.style.display = "none";
-                feedback.innerText = "Karibu Zepox, utambulisho ni sahihi.";
-
-                setTimeout(() => {
-                    document.getElementById('biometricScreen').style.display = 'none';
-                    document.getElementById('lockOverlay').style.display = 'none';
-                    document.getElementById('mainApp').style.display = 'block';
-                }, 1500);
-
-            }, 4500);
-        }
-
-        // Logic ya kukataa (Example function ukihitaji kuita ikifeli)
-        function authFailed() {
-            const title = document.getElementById('scanTitle');
-            const emotion = document.getElementById('emotionResult');
-            const feedback = document.getElementById('feedbackText');
-
-            title.innerText = "IMEKATALIWA!";
-            title.style.color = "var(--accent)";
-            emotion.innerText = "😔";
-            emotion.style.display = "block";
-            feedback.innerText = "Sura au Kidole sio sahihi. Jaribu tena.";
-
-            setTimeout(() => {
-                document.getElementById('biometricScreen').style.display = 'none';
-                emotion.style.display = "none";
-                document.getElementById('scannerFrame').style.display = "block";
-            }, 3000);
-        }
-
-        function startNewUser() {
-            tempID = 'ANON-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+        // 1. Hatua ya Usajili (Enrollment)
+        function showRegistration() {
+            tempID = 'ANON-' + Math.random().toString(36).substring(2, 6).toUpperCase() + (Math.floor(Math.random() * 900) + 100);
             document.getElementById('mainAuthUI').classList.add('hidden');
             document.getElementById('newUserUI').classList.remove('hidden');
             document.getElementById('newIDDisplay').innerText = tempID;
         }
 
-        function saveAndEnter() {
-            localStorage.setItem('iaa_id', tempID);
-            anonId = tempID;
-            document.getElementById('lockOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
+        function enrollBiometrics() {
+            document.getElementById('biometricScreen').style.display = 'flex';
+            document.getElementById('statusMsg').innerText = "INASAJILI ALAMA ZA KIBAOLOJIA...";
+
+            setTimeout(() => {
+                localStorage.setItem('iaa_auth_token', tempID);
+                localStorage.setItem('iaa_bio_ready', 'true');
+                finishAuth("USAJILI UMEKAMILIKA! 😊");
+            }, 4000);
+        }
+
+        // 2. Hatua ya Uhakiki (Verification)
+        function startVerification() {
+            if (!savedId || biometricRegistered !== 'true') {
+                return alert("Hujasajili Biometric bado. Tafadhali chagua 'Mgeni Mpya'.");
+            }
+
+            document.getElementById('biometricScreen').style.display = 'flex';
+            const status = document.getElementById('statusMsg');
+            const title = document.getElementById('scanTitle');
+
+            status.innerText = "INATAFUTA DATA ZA SURA NA KIDOLE...";
+
+            // Simulation ya Logic ya Uhakiki
+            setTimeout(() => {
+                // HAPA: Kwenye mfumo wa kweli ungepiga picha au kusoma sensor
+                const success = true; // Tunadhani imekubali
+
+                if (success) {
+                    finishAuth("IMETHIBITISHWA! 😊");
+                } else {
+                    failAuth("HAIJATAMBULIKA 😔");
+                }
+            }, 5000);
+        }
+
+        function finishAuth(msg) {
+            const title = document.getElementById('scanTitle');
+            const emotion = document.getElementById('emotionResult');
+            const frame = document.getElementById('scannerFrame');
+            const status = document.getElementById('statusMsg');
+
+            title.innerText = msg;
+            title.style.color = "var(--success)";
+            emotion.innerText = "😊";
+            emotion.style.display = "block";
+            frame.style.display = "none";
+            status.innerText = "UTAMBULISHO NI SAHIHI. KARIBU.";
+
+            setTimeout(() => {
+                document.getElementById('biometricScreen').style.display = 'none';
+                document.getElementById('lockOverlay').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+            }, 2000);
+        }
+
+        function failAuth(msg) {
+            const title = document.getElementById('scanTitle');
+            const emotion = document.getElementById('emotionResult');
+            const frame = document.getElementById('scannerFrame');
+            const status = document.getElementById('statusMsg');
+
+            title.innerText = msg;
+            title.style.color = "var(--accent)";
+            emotion.innerText = "😔";
+            emotion.style.display = "block";
+            frame.style.display = "none";
+            status.innerText = "KIDOLE AU SURA SIO SAHIHI!";
+
+            setTimeout(() => {
+                location.reload(); // Rudi mwanzo
+            }, 3000);
         }
 
         function verifyWithCode() {
             const code = document.getElementById('passcodeInput').value.trim().toUpperCase();
-            if (code === anonId && anonId !== null) {
+            if (code === savedId && savedId !== null) {
                 document.getElementById('lockOverlay').style.display = 'none';
                 document.getElementById('mainApp').style.display = 'block';
             } else {
-                alert("Kodi sio sahihi!");
+                alert("Kodi Sio Sahihi!");
             }
         }
     </script>
