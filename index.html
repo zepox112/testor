@@ -17,17 +17,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="logo.jpg">
 
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').then(reg => {
-                    console.log('App imesajiliwa!');
-                }).catch(err => {
-                    console.log('Usajili umeshindwa!', err);
-                });
-            });
-        }
-    </script>
     <style>
         :root {
             --glass: rgba(255, 255, 255, 0.1);
@@ -68,7 +57,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(25px);
         }
 
         .lock-box {
@@ -82,15 +71,68 @@
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
         }
 
-        .header-logo {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background: white;
-            margin-bottom: 15px;
+        /* --- ANIMATIONS ZA BIOMETRIC --- */
+        .bio-icon-container {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bio-scanner {
+            width: 80px;
+            height: 80px;
             border: 2px solid var(--primary);
-            object-fit: cover;
-            box-shadow: 0 0 15px var(--primary);
+            border-radius: 50%;
+            position: absolute;
+            animation: pulse 2s infinite;
+        }
+
+        .fingerprint-svg {
+            width: 60px;
+            height: 60px;
+            fill: var(--primary);
+            opacity: 0.3;
+        }
+
+        .scanning-line {
+            position: absolute;
+            width: 80px;
+            height: 2px;
+            background: var(--success);
+            top: 50%;
+            box-shadow: 0 0 15px var(--success);
+            animation: scanMove 2s infinite ease-in-out;
+            display: none;
+        }
+
+        @keyframes scanMove {
+            0% {
+                top: 20%;
+            }
+
+            50% {
+                top: 80%;
+            }
+
+            100% {
+                top: 20%;
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1.3);
+                opacity: 0;
+            }
         }
 
         .id-badge {
@@ -104,27 +146,6 @@
             display: inline-block;
             letter-spacing: 2px;
             box-shadow: 0 0 15px var(--primary);
-        }
-
-        .blob {
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: linear-gradient(var(--primary), var(--secondary));
-            filter: blur(80px);
-            border-radius: 50%;
-            z-index: -1;
-            animation: move 20s infinite alternate;
-        }
-
-        @keyframes move {
-            from {
-                transform: translate(-50px, -50px);
-            }
-
-            to {
-                transform: translate(150px, 150px);
-            }
         }
 
         .container {
@@ -149,7 +170,6 @@
             font-size: 16px;
             color: var(--primary);
             letter-spacing: 1px;
-            line-height: 1.4;
         }
 
         .nav-tabs {
@@ -180,31 +200,10 @@
 
         .content-section {
             display: none;
-            animation: slideIn 0.4s ease-out;
         }
 
         .content-section.active {
             display: block;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(15px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        label {
-            display: block;
-            margin: 15px 0 5px 5px;
-            font-size: 11px;
-            font-weight: 500;
-            color: var(--primary);
         }
 
         select,
@@ -234,18 +233,12 @@
             transition: 0.3s;
         }
 
-        .btn:hover {
-            filter: brightness(1.2);
-            transform: translateY(-2px);
-        }
-
         .chat-container {
             height: 350px;
             background: rgba(0, 0, 0, 0.2);
             border-radius: 20px;
             padding: 15px;
             overflow-y: auto;
-            border: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -256,22 +249,18 @@
             padding: 10px 15px;
             border-radius: 18px;
             font-size: 12px;
-            line-height: 1.4;
-            position: relative;
         }
 
         .msg-office {
             align-self: flex-start;
             background: var(--glass-thick);
             color: var(--primary);
-            border-bottom-left-radius: 2px;
         }
 
         .msg-student {
             align-self: flex-end;
             background: var(--primary);
             color: #061a3d;
-            border-bottom-right-radius: 2px;
         }
 
         .hidden {
@@ -279,7 +268,7 @@
         }
 
         .divider {
-            margin: 15px 0;
+            margin: 20px 0;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
         }
@@ -289,7 +278,7 @@
             top: -10px;
             left: 50%;
             transform: translateX(-50%);
-            background: #1e3c72;
+            background: #152c50;
             padding: 0 10px;
             font-size: 10px;
             color: var(--primary);
@@ -300,29 +289,34 @@
 <body>
     <div id="lockOverlay">
         <div class="lock-box">
-            <img src="logo.jpg" alt="IAA Logo" class="header-logo">
-            <h2 style="font-family: Orbitron; color: var(--primary); font-size: 16px;">HIGH SECURITY ACCESS</h2>
-            <p style="font-size: 10px; margin-bottom: 20px; opacity: 0.8;">IAA Gender & Counseling Support System</p>
+            <div class="bio-icon-container" id="bioContainer">
+                <div class="bio-scanner"></div>
+                <svg class="fingerprint-svg" viewBox="0 0 24 24">
+                    <path
+                        d="M17.81 4.47c-.08 0-.16-.02-.23-.06C15.66 3.42 14 3 12.01 3c-1.98 0-3.86.47-5.57 1.41-.24.13-.54.04-.68-.2-.13-.24-.04-.55.2-.68C7.82 2.52 9.86 2 12.01 2c2.13 0 3.99.47 6.03 1.56.24.13.33.43.2.67-.09.15-.24.24-.43.24zM3.51 9.72c-.1 0-.2-.03-.3-.09-.23-.15-.3-.45-.15-.68C4.7 6.4 7.62 4.5 12 4.5c4.35 0 7.31 1.9 8.93 4.44.15.23.08.54-.15.68-.23.15-.54.08-.68-.15-1.44-2.25-4.04-3.96-8.1-3.96-4.04 0-6.66 1.71-8.1 3.96-.09.14-.24.23-.39.23zm.51 4.84c-.2 0-.39-.12-.47-.31-.1-.26.03-.54.29-.64 2.25-.86 4.31-1.3 6.13-1.3 1.83 0 3.88.44 6.13 1.3.26.1.39.38.29.64-.1.26-.38.39-.64.29-2.11-.81-3.99-1.23-5.78-1.23-1.78 0-3.66.42-5.78 1.23-.06.02-.12.02-.17.02zm8.01 6.94c-2.4 0-4.66-.75-6.55-2.15-.22-.17-.27-.48-.1-.7.17-.22.48-.27.7-.1 1.69 1.25 3.7 1.93 5.95 1.93 2.25 0 4.26-.68 5.95-1.93.22-.17.53-.12.7.1.17.22.12.53-.1.7-1.89 1.4-4.15 2.15-6.55 2.15z" />
+                </svg>
+                <div class="scanning-line" id="scanLine"></div>
+            </div>
+
+            <h2 id="statusText" style="font-family: Orbitron; color: var(--primary); font-size: 14px;">USALAMA WA
+                BIOMETRIC</h2>
+            <p id="subStatus" style="font-size: 10px; margin-bottom: 20px; opacity: 0.8;">IAA Gender & Counseling System
+            </p>
 
             <div id="choiceUI">
-                <button class="btn" onclick="authenticateBiometric()">FUNGUA KWA BIOMETRIC 🔓</button>
-
+                <button class="btn" onclick="startBiometricAuth()">INGIA KWA ALAMA YA KIDOLE / SURA 🔓</button>
                 <div class="divider"><span>AU TUMIA KODI</span></div>
-
-                <input type="text" id="returningIDInput" placeholder="INGIZA ANON-XXXX"
+                <input type="text" id="returningIDInput" placeholder="ANON-XXXX"
                     style="text-align: center; text-transform: uppercase; font-family: Orbitron; margin-bottom: 10px;">
                 <button class="btn" style="margin-top: 0; background: var(--glass-thick);"
                     onclick="verifyReturningID()">INGIA KWA KODI</button>
-
                 <button class="btn" style="background: transparent; border: 1px solid var(--primary); margin-top: 25px;"
-                    onclick="generateNewIdentity()">MIMI NI MGENI MPYA (ANZA HAPA)</button>
+                    onclick="generateNewIdentity()">MGENI MPYA (TENGENEZA KODI)</button>
             </div>
 
             <div id="firstTimeUI" class="hidden">
-                <p style="font-size: 11px; margin-top: 10px;">Hili ni jina lako la siri. **LIHIFADHI SASA**!</p>
+                <p style="font-size: 11px;">Hili ni jina lako la siri. Lihifadhi!</p>
                 <div class="id-badge" id="generatedIDDisplay">...</div>
-                <p style="font-size: 10px; color: var(--primary); margin-bottom: 10px;">Sajili Kidole/Uso ili kuitumia
-                    kodi hii kirahisi baadae.</p>
                 <button class="btn" onclick="registerBiometric()">SAJILI BIOMETRIC & INGIA</button>
             </div>
         </div>
@@ -335,11 +329,10 @@
             <img src="logo.jpg" alt="Logo"
                 style="width: 50px; height: 50px; border-radius: 50%; background: white; margin-bottom: 8px; border: 1px solid var(--primary);">
             <h1>IAA GENDER & COUNSELING</h1>
-            <p style="font-size: 8px; opacity: 0.7; letter-spacing: 1px;">PRIVACY • SUPPORT • SAFETY</p>
         </div>
 
         <div class="nav-tabs">
-            <div class="tab active" onclick="switchView('reportView', this)">RIPOTI TUKIO</div>
+            <div class="tab active" onclick="switchView('reportView', this)">RIPOTI</div>
             <div class="tab" onclick="switchView('suggestView', this)">MAONI</div>
             <div class="tab" onclick="switchView('chatView', this)">LIVE CHAT</div>
         </div>
@@ -351,9 +344,8 @@
                 <option value="Uonevu (Bullying)">Uonevu (Bullying)</option>
                 <option value="Vinginevyo">Vinginevyo</option>
             </select>
-            <textarea id="reportDesc" placeholder="Elezea tukio hapa..."
-                style="height: 150px; margin-top: 15px;"></textarea>
-            <button class="btn" onclick="submitReport()">🚀 WASILISHA RIPOTI</button>
+            <textarea id="reportDesc" placeholder="Elezea hapa..." style="height: 150px; margin-top: 15px;"></textarea>
+            <button class="btn" onclick="submitReport()">🚀 WASILISHA</button>
         </div>
 
         <div id="suggestView" class="content-section">
@@ -363,13 +355,13 @@
             </select>
             <textarea id="suggestContent" placeholder="Andika maoni yako hapa..."
                 style="height: 150px; margin-top: 15px;"></textarea>
-            <button class="btn" onclick="submitSuggestion()">💡 TUMA MAONI</button>
+            <button class="btn" onclick="submitSuggestion()">💡 TUMA</button>
         </div>
 
         <div id="chatView" class="content-section">
             <div class="chat-container" id="chatDisplay"></div>
             <div style="display:flex; gap:10px; margin-top: 15px;">
-                <textarea id="chatMessage" placeholder="Andika ujumbe..." style="height: 55px;"></textarea>
+                <textarea id="chatMessage" placeholder="Andika..." style="height: 55px;"></textarea>
                 <button class="btn" onclick="sendMessage()" style="width:65px; margin:0; font-size: 20px;">✈️</button>
             </div>
         </div>
@@ -380,67 +372,91 @@
         let anonId = localStorage.getItem('iaa_welfare_id');
         let tempID = "";
 
-        // 1. BIOMETRIC LOGIC - FIXED NO PASSKEY ISSUE
-        async function authenticateBiometric() {
-            if (!anonId) return alert("Hujasajiliwa. Chagua 'Mgeni Mpya' kwanza.");
+        // --- CUSTOM BIOMETRIC AUTHENTICATION ---
+        async function startBiometricAuth() {
+            if (!anonId) return alert("Hujasajiliwa. Chagua 'Mgeni Mpya'.");
 
-            const options = {
-                publicKey: {
-                    challenge: crypto.getRandomValues(new Uint8Array(32)),
-                    // Tunaondoa allowCredentials ili isitafute Passkey maalum, bali itumie uwezo wa simu wa ndani
-                    userVerification: "required",
-                    timeout: 60000
-                }
-            };
+            const statusText = document.getElementById('statusText');
+            const subStatus = document.getElementById('subStatus');
+            const scanLine = document.getElementById('scanLine');
+
+            // Tambua aina ya kifaa
+            const isPC = !navigator.userAgent.match(/Android|iPhone/i);
+            statusText.innerText = isPC ? "INAHAKIKI SURA / PIN..." : "INAHAKIKI KIDOLE...";
+            subStatus.innerText = "Tafadhali kamilisha uthibitisho kwenye kifaa chako";
+            scanLine.style.display = "block";
 
             try {
-                const assertion = await navigator.credentials.get(options);
-                if (assertion) {
-                    sessionStorage.setItem('is_auth', 'true');
-                    openApp();
+                // Tunatumia WebAuthn lakini bila Google Passkeys (Simple Platform Auth)
+                const challenge = new Uint8Array(32);
+                window.crypto.getRandomValues(challenge);
+
+                const authOptions = {
+                    publicKey: {
+                        challenge: challenge,
+                        timeout: 60000,
+                        userVerification: "required"
+                    }
+                };
+
+                const credential = await navigator.credentials.get(authOptions);
+
+                if (credential) {
+                    statusText.innerText = "IMETHIBITISHWA! ✅";
+                    statusText.style.color = "var(--success)";
+                    scanLine.style.display = "none";
+
+                    setTimeout(() => {
+                        sessionStorage.setItem('is_auth', 'true');
+                        openApp();
+                    }, 1000);
                 }
             } catch (e) {
-                console.error(e);
-                alert("Biometric imeshindwa! Ingiza Kodi yako hapa chini.");
+                statusText.innerText = "USALAMA WA BIOMETRIC";
+                subStatus.innerText = "Uhakiki umeshindwa au umesitishwa.";
+                scanLine.style.display = "none";
             }
         }
 
         async function registerBiometric() {
-            const options = {
-                publicKey: {
-                    challenge: crypto.getRandomValues(new Uint8Array(32)),
-                    rp: { name: "IAA Gender System", id: window.location.hostname },
-                    user: {
-                        id: crypto.getRandomValues(new Uint8Array(16)),
-                        name: tempID,
-                        displayName: tempID
-                    },
-                    pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
-                    authenticatorSelection: {
-                        authenticatorAttachment: "platform", // Muhimu kwa ajili ya simu
-                        userVerification: "required",
-                        residentKey: "required"
-                    },
-                    timeout: 60000
-                }
-            };
+            const statusText = document.getElementById('statusText');
+            statusText.innerText = "INASAJILI BIOMETRIC...";
 
             try {
-                const credential = await navigator.credentials.create(options);
+                // Hapa tunasajili kifaa kiasili (Platform)
+                const challenge = new Uint8Array(32);
+                window.crypto.getRandomValues(challenge);
+
+                const createOptions = {
+                    publicKey: {
+                        challenge: challenge,
+                        rp: { name: "IAA System", id: window.location.hostname },
+                        user: {
+                            id: Uint8Array.from(tempID, c => c.charCodeAt(0)),
+                            name: tempID,
+                            displayName: tempID
+                        },
+                        pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+                        authenticatorSelection: { authenticatorAttachment: "platform" },
+                        timeout: 60000
+                    }
+                };
+
+                const credential = await navigator.credentials.create(createOptions);
+
                 if (credential) {
                     localStorage.setItem('iaa_welfare_id', tempID);
                     anonId = tempID;
                     sessionStorage.setItem('is_auth', 'true');
-                    alert("Usajili Umekamilika!");
-                    openApp();
+                    statusText.innerText = "USAJILI UMEKAMILIKA! ✅";
+                    setTimeout(openApp, 1000);
                 }
             } catch (e) {
-                console.error(e);
-                // Ikishindwa bado mruhusu aingie kwa kodi
+                // Hata ikishindwa, mruhusu aendelee na kodi yake (Fall-back)
                 localStorage.setItem('iaa_welfare_id', tempID);
                 anonId = tempID;
                 sessionStorage.setItem('is_auth', 'true');
-                alert("Biometric haijatambuliwa, lakini kodi yako imehifadhiwa!");
+                alert("Biometric haijasajiliwa, lakini kodi yako imehifadhiwa!");
                 openApp();
             }
         }
@@ -454,7 +470,7 @@
 
         function verifyReturningID() {
             const input = document.getElementById('returningIDInput').value.trim().toUpperCase();
-            if (input === anonId && anonId !== null) {
+            if (input === anonId) {
                 sessionStorage.setItem('is_auth', 'true');
                 openApp();
             } else {
@@ -469,9 +485,7 @@
         }
 
         window.onload = () => {
-            if (sessionStorage.getItem('is_auth') === 'true' && anonId) {
-                openApp();
-            }
+            if (sessionStorage.getItem('is_auth') === 'true' && anonId) openApp();
         };
 
         document.addEventListener('visibilitychange', () => {
@@ -481,7 +495,7 @@
             }
         });
 
-        // 2. CORE FUNCTIONS
+        // --- APP LOGIC ---
         function switchView(viewId, tabElem) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             tabElem.classList.add('active');
@@ -502,7 +516,7 @@
 
         async function submitSuggestion() {
             const content = document.getElementById('suggestContent').value;
-            if (!content) return alert("Andika maoni.");
+            if (!content) return alert("Weka maoni.");
             try {
                 await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'sendSuggestion', target: document.getElementById('suggestTarget').value, content }) });
                 alert("Asante!");
