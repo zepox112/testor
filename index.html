@@ -21,7 +21,7 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').then(reg => {
-                    console.log('App imesajiliwa kikamilifu!');
+                    console.log('App imesajiliwa!');
                 }).catch(err => {
                     console.log('Usajili umeshindwa!', err);
                 });
@@ -305,7 +305,7 @@
             <p style="font-size: 10px; margin-bottom: 20px; opacity: 0.8;">IAA Gender & Counseling Support System</p>
 
             <div id="choiceUI">
-                <button class="btn" onclick="authenticateBiometric()" id="bioBtn">FUNGUA KWA BIOMETRIC 🔓</button>
+                <button class="btn" onclick="authenticateBiometric()">FUNGUA KWA BIOMETRIC 🔓</button>
 
                 <div class="divider"><span>AU TUMIA KODI</span></div>
 
@@ -315,7 +315,7 @@
                     onclick="verifyReturningID()">INGIA KWA KODI</button>
 
                 <button class="btn" style="background: transparent; border: 1px solid var(--primary); margin-top: 25px;"
-                    onclick="generateNewIdentity()">MIMI NI MGENI MPYA (TENGENEZA KODI)</button>
+                    onclick="generateNewIdentity()">MIMI NI MGENI MPYA (ANZA HAPA)</button>
             </div>
 
             <div id="firstTimeUI" class="hidden">
@@ -345,7 +345,6 @@
         </div>
 
         <div id="reportView" class="content-section active">
-            <label>Aina ya Tukio</label>
             <select id="reportCategory">
                 <option value="Unyanyasaji wa Kijinsia">Unyanyasaji wa Kijinsia</option>
                 <option value="Rushwa ya Ngono/Fedha">Rushwa ya Ngono / Fedha</option>
@@ -358,7 +357,6 @@
         </div>
 
         <div id="suggestView" class="content-section">
-            <label>Ofisi Husika</label>
             <select id="suggestTarget">
                 <option value="Social Welfare">Social Welfare Office</option>
                 <option value="Gender Desk">Gender Desk</option>
@@ -382,26 +380,20 @@
         let anonId = localStorage.getItem('iaa_welfare_id');
         let tempID = "";
 
-        // CORE BIOMETRIC LOGIC
+        // 1. BIOMETRIC LOGIC - FIXED NO PASSKEY ISSUE
         async function authenticateBiometric() {
-            if (!anonId) return alert("Hujasajiliwa bado.");
+            if (!anonId) return alert("Hujasajiliwa. Chagua 'Mgeni Mpya' kwanza.");
 
-            // Hapa tunaiambia browser kuwa tunataka kutumia sensa ya simu (Platform)
             const options = {
                 publicKey: {
                     challenge: crypto.getRandomValues(new Uint8Array(32)),
-                    allowCredentials: [{
-                        id: Uint8Array.from(anonId, c => c.charCodeAt(0)),
-                        type: "public-key",
-                        transports: ["internal"] // Hii inalazimisha Fingerprint/Face ID ya ndani ya simu
-                    }],
+                    // Tunaondoa allowCredentials ili isitafute Passkey maalum, bali itumie uwezo wa simu wa ndani
                     userVerification: "required",
                     timeout: 60000
                 }
             };
 
             try {
-                // Ikiwa simu haina passkey bado, itauliza Fingerprint kuunda moja
                 const assertion = await navigator.credentials.get(options);
                 if (assertion) {
                     sessionStorage.setItem('is_auth', 'true');
@@ -409,8 +401,7 @@
                 }
             } catch (e) {
                 console.error(e);
-                // Ikiwa hakuna passkey, mpe option ya kawaida
-                alert("Simu imeshindwa kusoma Biometric. Tumia Kodi ya siri.");
+                alert("Biometric imeshindwa! Ingiza Kodi yako hapa chini.");
             }
         }
 
@@ -426,8 +417,9 @@
                     },
                     pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
                     authenticatorSelection: {
-                        authenticatorAttachment: "platform", // Inalazimisha Fingerprint/FaceID ya kifaa
-                        userVerification: "required"
+                        authenticatorAttachment: "platform", // Muhimu kwa ajili ya simu
+                        userVerification: "required",
+                        residentKey: "required"
                     },
                     timeout: 60000
                 }
@@ -439,15 +431,16 @@
                     localStorage.setItem('iaa_welfare_id', tempID);
                     anonId = tempID;
                     sessionStorage.setItem('is_auth', 'true');
-                    alert("Biometric Imesajiliwa! Karibu.");
+                    alert("Usajili Umekamilika!");
                     openApp();
                 }
             } catch (e) {
                 console.error(e);
-                alert("Usajili wa Biometric umeshindwa. Ingia kwa kodi.");
+                // Ikishindwa bado mruhusu aingie kwa kodi
                 localStorage.setItem('iaa_welfare_id', tempID);
                 anonId = tempID;
                 sessionStorage.setItem('is_auth', 'true');
+                alert("Biometric haijatambuliwa, lakini kodi yako imehifadhiwa!");
                 openApp();
             }
         }
@@ -465,7 +458,7 @@
                 sessionStorage.setItem('is_auth', 'true');
                 openApp();
             } else {
-                alert("Kodi si sahihi!");
+                alert("Kodi si sahihi kwa kifaa hiki!");
             }
         }
 
@@ -488,7 +481,7 @@
             }
         });
 
-        // CORE APP FUNCTIONS
+        // 2. CORE FUNCTIONS
         function switchView(viewId, tabElem) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             tabElem.classList.add('active');
@@ -504,7 +497,7 @@
                 await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: 'sendReport', anonId, category: document.getElementById('reportCategory').value, desc }) });
                 alert("Ripoti imetumwa!");
                 document.getElementById('reportDesc').value = "";
-            } catch (e) { alert("Tatizo la mtandao!"); }
+            } catch (e) { alert("Hitilafu!"); }
         }
 
         async function submitSuggestion() {
@@ -533,7 +526,7 @@
                 const res = await fetch(`${APPS_SCRIPT_URL}?action=getMessages&anonId=${anonId}`);
                 const messages = await res.json();
                 if (!messages || messages.length === 0) {
-                    display.innerHTML = `<div style="text-align:center; opacity:0.5; font-size:11px; margin-top:100px;">Anza mazungumzo...</div>`;
+                    display.innerHTML = `<div style="text-align:center; opacity:0.5; font-size:11px; margin-top:100px;">Bado hakuna mazungumzo.</div>`;
                     return;
                 }
                 display.innerHTML = messages.map(m => `
