@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IAA Gender Support - Biometric</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Orbitron:wght@500&display=swap" rel="stylesheet">
+    <title>IAA Gender Support - Official Biometric</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Poppins:wght@300;400&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #00d2ff;
@@ -13,137 +13,114 @@
             --bg: #061a3d;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: var(--bg);
-            font-family: 'Poppins', sans-serif;
-            color: white; height: 100vh; overflow: hidden;
-            display: flex; justify-content: center; align-items: center;
-        }
+        body { background: var(--bg); font-family: 'Poppins', sans-serif; color: white; overflow: hidden; height: 100vh; display: flex; align-items: center; justify-content: center; }
 
         /* --- FULL SCREEN SCANNER UI --- */
-        #scannerOverlay {
+        #biometricScreen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle, #0a2342, #061a3d);
-            z-index: 30000; display: none; flex-direction: column;
+            z-index: 99999; display: none; flex-direction: column;
             align-items: center; justify-content: center; text-align: center;
         }
 
-        .finger-matrix {
-            position: absolute; width: 100%; height: 100%;
-            display: grid; grid-template-columns: repeat(8, 1fr);
-            opacity: 0.05; pointer-events: none;
-        }
-
-        .scan-container {
+        .scan-box {
             width: 200px; height: 200px; border: 3px solid var(--primary);
             border-radius: 40px; position: relative; overflow: hidden;
-            background: rgba(0, 210, 255, 0.05); box-shadow: 0 0 50px rgba(0, 210, 255, 0.2);
+            box-shadow: 0 0 50px rgba(0, 210, 255, 0.2);
         }
 
         .scan-line {
-            position: absolute; width: 100%; height: 4px;
-            background: var(--primary); box-shadow: 0 0 20px var(--primary);
-            animation: moveScan 2s infinite ease-in-out;
+            position: absolute; width: 100%; height: 4px; background: var(--primary);
+            box-shadow: 0 0 20px var(--primary); top: 0; animation: scanAnim 2s infinite linear;
         }
+        @keyframes scanAnim { 0% { top: 10%; } 50% { top: 90%; } 100% { top: 10%; } }
 
-        @keyframes moveScan { 0%, 100% { top: 10%; } 50% { top: 90%; } }
+        .finger-bg { position: absolute; width: 100%; height: 100%; display: grid; grid-template-columns: repeat(8, 1fr); opacity: 0.1; pointer-events: none; }
+        .finger-bg span { font-size: 25px; padding: 5px; }
 
-        #statusEmoji { font-size: 80px; margin-top: 20px; display: none; animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+        #emotion { font-size: 100px; display: none; animation: pop 0.5s ease; }
+        @keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
 
-        .lock-card {
-            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1);
-            padding: 40px; border-radius: 40px; text-align: center; width: 90%; max-width: 400px;
-            backdrop-filter: blur(20px);
-        }
-
-        .btn {
-            background: linear-gradient(90deg, #9d50bb, #00d2ff);
-            border: none; padding: 18px; width: 100%; border-radius: 20px;
-            color: white; font-weight: 600; font-family: 'Orbitron';
-            cursor: pointer; margin-top: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-        }
-
-        .id-badge { background: var(--primary); color: #061a3d; padding: 12px; border-radius: 12px; font-weight: bold; margin: 20px 0; display: inline-block; font-family: 'Orbitron'; }
+        .btn { background: linear-gradient(90deg, #9d50bb, #00d2ff); border: none; padding: 18px 40px; border-radius: 20px; color: white; font-weight: bold; font-family: 'Orbitron'; cursor: pointer; margin-top: 20px; }
+        .lock-card { text-align: center; padding: 30px; background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border-radius: 40px; border: 1px solid rgba(255,255,255,0.1); width: 90%; max-width: 400px; }
         .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="scannerOverlay">
-        <div class="finger-matrix" id="matrix"></div>
-        <div id="statusEmoji">😊</div>
-        <h2 id="scanTitle" style="font-family: Orbitron; color: var(--primary); margin-bottom: 20px;">INAHAKIKI...</h2>
-        
-        <div class="scan-container" id="box">
+    <div id="biometricScreen">
+        <div class="finger-bg" id="particles"></div>
+        <div id="emotion">😊</div>
+        <h1 id="statusTxt" style="font-family: Orbitron; color: var(--primary); margin-bottom: 20px;">INAHAKIKI...</h1>
+        <div class="scan-box" id="box">
             <div class="scan-line" id="line"></div>
-            <svg style="width:100px; height:100px; margin-top:50px; fill:var(--primary); opacity:0.3;" viewBox="0 0 24 24"><path d="M12 1c-4.97 0-9 4.03-9 9 0 .41.34.75.75.75s.75-.34.75-.75c0-4.14 3.36-7.5 7.5-7.5s7.5 3.36 7.5 7.5c0 .41.34.75.75.75s.75-.34.75-.75c0-4.97-4.03-9-9-9z"/></svg>
+            <svg style="width:100px; margin-top:50px; fill:var(--primary); opacity:0.3;" viewBox="0 0 24 24"><path d="M12 1c-4.97 0-9 4.03-9 9 0 .41.34.75.75.75s.75-.34.75-.75c0-4.14 3.36-7.5 7.5-7.5s7.5 3.36 7.5 7.5c0 .41.34.75.75.75s.75-.34.75-.75c0-4.97-4.03-9-9-9z"/></svg>
         </div>
-        
-        <p id="scanDesc" style="margin-top:20px; letter-spacing: 1px;">WEKA KIDOLE KWENYE SENSA YA SIMU</p>
+        <p id="msgTxt" style="margin-top:20px; font-weight: bold;">WEKA KIDOLE KWENYE SENSA</p>
     </div>
 
-    <div class="lock-card" id="startUI">
-        <img src="logo.jpg" style="width:80px; height:80px; border-radius:50%; border:2px solid var(--primary); margin-bottom:20px;">
-        <h1 style="font-family: Orbitron; font-size: 18px; color: var(--primary);">IAA SECURE</h1>
-        <button class="btn" onclick="triggerHardwareAuth()">FUNGUA KWA SENSA 🔓</button>
-        <button class="btn" style="background:none; border:1px solid var(--primary);" onclick="showReg()">MGENI MPYA</button>
-    </div>
-
-    <div class="lock-card hidden" id="regUI">
-        <p>Kodi yako ya siri:</p>
-        <div class="id-badge" id="newID">...</div>
-        <button class="btn" onclick="registerHardwareBio()">SAJILI SENSA YA SIMU</button>
+    <div class="lock-card" id="lockUI">
+        <img src="logo.jpg" style="width:80px; border-radius:50%; border:2px solid var(--primary); margin-bottom:20px;">
+        <h2 style="font-family: Orbitron; margin-bottom: 20px;">IAA SECURE</h2>
+        <div id="loginArea">
+            <button class="btn" onclick="signIn()">INGIA KWA KIDOLE 🔓</button>
+            <button class="btn" style="background:none; border: 1px solid var(--primary); margin-top:15px;" onclick="showSignUp()">MGENI MPYA (JIUNGE)</button>
+        </div>
+        <div id="signUpArea" class="hidden">
+            <input type="text" id="userName" placeholder="ANDIKA JINA LAKO" style="width:100%; padding:15px; border-radius:15px; border:none; margin-bottom:10px; text-align:center; font-family:Orbitron;">
+            <button class="btn" onclick="signUp()">SAJILI GOOGLE KEY & INGIA</button>
+        </div>
     </div>
 
     <div id="mainApp" class="hidden" style="text-align:center;">
-        <h1 style="color:var(--success);">MFUMO UMEFUNGULIWA!</h1>
-        <p>Utambulisho wako umethibitishwa na Hardware.</p>
+        <h1 style="color:var(--success); font-family:Orbitron;">KARIBU KWENYE MFUMO</h1>
+        <button class="btn" onclick="location.reload()" style="background:var(--accent);">LOGOUT</button>
     </div>
 
     <script>
-        // Jaza matrix ya fingerprints
-        const matrix = document.getElementById('matrix');
-        for(let i=0; i<64; i++) { matrix.innerHTML += '<span>⠿</span>'; }
+        // Jaza background fingerprints
+        const part = document.getElementById('particles');
+        for(let i=0; i<48; i++) { part.innerHTML += '<span>⠿</span>'; }
 
-        let savedToken = localStorage.getItem('iaa_hardware_token');
+        // 1. SIGN UP - Hapa ndipo tunasajili jina kwenye Google Key
+        async function signUp() {
+            const name = document.getElementById('userName').value.trim();
+            if(!name) return alert("Tafadhali andika jina!");
 
-        // 1. SAJILI HARDWARE (FINGERPRINT/FACE ID)
-        async function registerHardwareBio() {
-            const tempID = 'ANON-' + Math.random().toString(36).substring(2,8).toUpperCase();
-            
+            const challenge = crypto.getRandomValues(new Uint8Array(32));
+            const userID = crypto.getRandomValues(new Uint8Array(16));
+
             const options = {
                 publicKey: {
-                    challenge: crypto.getRandomValues(new Uint8Array(32)),
-                    rp: { name: "IAA Gender", id: window.location.hostname },
-                    user: { id: crypto.getRandomValues(new Uint8Array(16)), name: tempID, displayName: tempID },
+                    challenge,
+                    rp: { name: "IAA Gender System", id: window.location.hostname },
+                    user: { id: userID, name: name, displayName: name },
                     pubKeyCredParams: [{ alg: -7, type: "public-key" }],
-                    authenticatorSelection: {
-                        authenticatorAttachment: "platform", // Hii inalazimisha Sensa ya nyuma/FaceID ya simu pekee
-                        userVerification: "required"
-                    },
+                    authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
                     timeout: 60000
                 }
             };
 
             try {
-                const cred = await navigator.credentials.create(options);
-                if(cred) {
-                    localStorage.setItem('iaa_hardware_token', tempID);
-                    alert("Sensa ya Simu Imesajiliwa! 😊");
-                    location.reload();
+                const credential = await navigator.credentials.create(options);
+                if(credential) {
+                    localStorage.setItem('iaa_registered', 'true');
+                    localStorage.setItem('iaa_user', name);
+                    showFullScanner("USAJILI UMEKAMILIKA! 😊");
                 }
             } catch (e) {
-                alert("Usajili umeshindwa. Hakikisha simu yako ina Fingerprint/Face ID.");
+                alert("Usajili umeshindwa. Hakikisha simu ina alama ya kidole.");
             }
         }
 
-        // 2. HAKIKI KWA HARDWARE
-        async function triggerHardwareAuth() {
-            if(!savedToken) return alert("Sajili Sensa kwanza!");
+        // 2. SIGN IN - Hapa simu itatambua jina moja kwa moja
+        async function signIn() {
+            if(localStorage.getItem('iaa_registered') !== 'true') {
+                return alert("Hujasajiliwa! Bonyeza 'Mgeni Mpya'.");
+            }
 
-            document.getElementById('scannerOverlay').style.display = 'flex';
-
+            document.getElementById('biometricScreen').style.display = 'flex';
+            
             const options = {
                 publicKey: {
                     challenge: crypto.getRandomValues(new Uint8Array(32)),
@@ -153,53 +130,48 @@
             };
 
             try {
-                // Hapa ndipo Sensa ya Nyuma ya simu au Face ID itawaka kiasili
                 const assertion = await navigator.credentials.get(options);
-                
                 if(assertion) {
-                    handleSuccess();
+                    showFullScanner("IMETHIBITISHWA! 😊");
                 }
             } catch (e) {
-                handleError();
+                showFullScanner("HAIJATAMBULIKA 😔", false);
             }
         }
 
-        function handleSuccess() {
-            const emoji = document.getElementById('statusEmoji');
-            const title = document.getElementById('scanTitle');
+        function showFullScanner(msg, success = true) {
+            document.getElementById('biometricScreen').style.display = 'flex';
+            const status = document.getElementById('statusTxt');
+            const emotion = document.getElementById('emotion');
             const box = document.getElementById('box');
+            const msgTxt = document.getElementById('msgTxt');
 
-            emoji.innerText = "😊";
-            emoji.style.display = "block";
-            title.innerText = "IMETHIBITISHWA!";
-            title.style.color = "var(--success)";
-            box.style.display = "none";
-
-            setTimeout(() => {
-                document.getElementById('scannerOverlay').style.display = 'none';
-                document.getElementById('startUI').style.display = 'none';
-                document.getElementById('mainApp').classList.remove('hidden');
-            }, 2000);
+            status.innerText = msg;
+            if(success) {
+                status.style.color = "var(--success)";
+                emotion.innerText = "😊";
+                emotion.style.display = "block";
+                box.style.display = "none";
+                msgTxt.innerText = "Utambulisho ni Sahihi!";
+                
+                setTimeout(() => {
+                    document.getElementById('biometricScreen').style.display = 'none';
+                    document.getElementById('lockUI').style.display = 'none';
+                    document.getElementById('mainApp').classList.remove('hidden');
+                }, 2000);
+            } else {
+                status.style.color = "var(--accent)";
+                emotion.innerText = "😔";
+                emotion.style.display = "block";
+                box.style.display = "none";
+                msgTxt.innerText = "Kidole Sio Sahihi!";
+                setTimeout(() => location.reload(), 3000);
+            }
         }
 
-        function handleError() {
-            const emoji = document.getElementById('statusEmoji');
-            const title = document.getElementById('scanTitle');
-
-            emoji.innerText = "😔";
-            emoji.style.display = "block";
-            title.innerText = "HAITAMBULIKI!";
-            title.style.color = "var(--accent)";
-
-            setTimeout(() => {
-                document.getElementById('scannerOverlay').style.display = 'none';
-                emoji.style.display = "none";
-            }, 3000);
-        }
-
-        function showReg() {
-            document.getElementById('startUI').classList.add('hidden');
-            document.getElementById('regUI').classList.remove('hidden');
+        function showSignUp() {
+            document.getElementById('loginArea').classList.add('hidden');
+            document.getElementById('signUpArea').classList.remove('hidden');
         }
     </script>
 </body>
